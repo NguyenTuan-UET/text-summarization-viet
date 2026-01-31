@@ -1,0 +1,5 @@
+# TextRank Vietnamese Text Summarization - Python Requirements
+# This file lists all Python dependencies needed to run the project
+
+# No external dependencies required!
+# This project uses only Python standard library

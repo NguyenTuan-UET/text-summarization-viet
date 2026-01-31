@@ -1,5 +1,6 @@
 # Class Facade cho thuật toán tóm tắt văn bản TextRank
 
+import math
 from typing import List, Dict, Optional
 from tools.parser import Parser
 from tools.graph import Graph
@@ -40,29 +41,42 @@ class TextRankFacade:
         return score.calculate(graph, text)
     
     def get_highlights(self, raw_text: str) -> List[str]:
-        # Tìm các câu quan trọng nhất (20% tổng số câu)
         parser = Parser()
         parser.set_minimum_word_length(3)
         parser.set_raw_text(raw_text)
-        
+
         if self._stop_words:
             parser.set_stop_words(self._stop_words)
-        
+
         text = parser.parse()
-        maximum_sentences = int(len(text.get_sentences()) * 0.2)
-        
+        sentences = text.get_sentences()
+        n_sent = len(sentences)
+
+        # ====== HIGHLIGHT POLICY ======
+        # 15–25% số câu, min 2, max 6
+        maximum_sentences = min(
+            max(2, math.ceil(n_sent * 0.2)),
+            6
+        )
+
+        # Số keyword phân tích: scale theo độ dài
+        analyzed_keywords = min(
+            max(5, n_sent),
+            12
+        )
+
         graph = Graph()
         graph.create_graph(text)
-        
+
         score = Score()
         scores = score.calculate(graph, text)
-        
+
         summarize = Summarize()
         return summarize.get_summarize(
             scores,
             graph,
             text,
-            12,
+            analyzed_keywords,
             maximum_sentences,
             Summarize.GET_ALL_IMPORTANT
         )

@@ -194,14 +194,6 @@ for rank, (word, score) in enumerate(list(keywords.items())[:10], 1):
 
 ---
 
-## 📚 Tài Liệu
-
-- [QUICKSTART.md](QUICKSTART.md) - 3 bước
-- [HOW_TO_RUN.md](HOW_TO_RUN.md) - Chi tiết
-- [CHANGELOG.md](CHANGELOG.md) - Lịch sử
-
----
-
 ## 🙏 Credits
 
 - VnCoreNLP - VNU UET

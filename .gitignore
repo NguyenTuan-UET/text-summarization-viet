@@ -27,3 +27,10 @@ Thumbs.db
 
 # Project specific
 *.log
+input.txt
+output.txt
+test_*.txt
+
+# Backup files
+*.old.*
+*.backup

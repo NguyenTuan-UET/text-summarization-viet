@@ -1,111 +1,211 @@
-# TextRank - Tóm Tắt Văn Bản Tiếng Việt
+# 🇻🇳 TextRank - Tóm Tắt Văn Bản Tiếng Việt
 
-Công cụ tóm tắt văn bản và trích xuất từ khóa tự động cho tiếng Việt sử dụng thuật toán **TextRank**.
+Công cụ tóm tắt văn bản và trích xuất từ khóa tự động cho tiếng Việt, sử dụng thuật toán TextRank + VnCoreNLP.
+
+[![Python](https://img.shields.io/badge/Python-3.7+-blue.svg)](https://www.python.org/)
+
+---
 
 ## Tính Năng
 
-- **Trích xuất từ khóa** - Tìm các từ quan trọng nhất trong văn bản
-- **Tóm tắt văn bản** - Lựa chọn câu quan trọng nhất tự động
-- **Tùy chỉnh linh hoạt** - Điều chỉnh số câu, từ khóa theo nhu cầu
-- **Hỗ trợ tiếng Việt** - Sử dụng 1,942 stop words tiếng Việt
-- **Không cần thư viện ngoài** - Chỉ dùng Python standard library
+- **Tóm tắt tự động** - 4+ phương thức tóm tắt
+- **VnCoreNLP** - Tách từ tiếng Việt chính xác
+- **Tùy chỉnh linh hoạt** - Điều chỉnh số câu, từ khóa
+- **Stopwords** - Lọc 1,942 stop words tiếng Việt
 
-## Cài Đặt và Chạy
+---
 
-### Yêu cầu
-
-- Python 3.7 trở lên
-- Không cần cài đặt thư viện ngoài
-
-### Chạy demo nhanh
+## Cài Đặt (4 Bước)
 
 ```bash
-cd python_version
-python3 quick_start.py
+# 1. Clone
+git clone https://github.com/NguyenTuan-UET/text-summarization-viet.git
+cd text-summarization-viet
+
+# 2. Tạo venv
+python3 -m venv venv
+source venv/bin/activate
+
+# 3. Cài dependencies
+pip install -r requirements.txt
+
+# 4. Chạy demo
+python3 demo_vncorenlp.py
 ```
 
-## Hướng Dẫn Sử Dụng
+---
 
-### 1. Sử dụng cơ bản
+## 📖 Sử Dụng
 
+### Bước 1: Khởi tạo
 ```python
 from textrank_facade import TextRankFacade
 from stopwords.vietnamese import Vietnamese
+from py_vncorenlp import VnCoreNLP
 
-# Khởi tạo
-tr = TextRankFacade()
-tr.set_stop_words(Vietnamese())
+# Khởi tạo VnCoreNLP
+vncorenlp = VnCoreNLP(annotators=["wseg"], save_dir="./vncorenlp")
 
-# Văn bản cần tóm tắt
+# Khởi tạo TextRank Facade
+tr = TextRankFacade(vncorenlp, Vietnamese())
+```
+
+### Bước 2: Chuẩn bị văn bản
+```python
 text = """
-Việt Nam là một quốc gia nằm ở phía đông của bán đảo Đông Dương.
-Việt Nam có diện tích khoảng 331.000 km² và dân số hơn 97 triệu người.
-Thủ đô của Việt Nam là Hà Nội. Thành phố lớn nhất là TP Hồ Chí Minh.
+Trí tuệ nhân tạo đang phát triển rất nhanh trong những năm gần đây.
+Nhiều doanh nghiệp Việt Nam bắt đầu ứng dụng AI vào sản xuất và kinh doanh.
+Các hệ thống gợi ý giúp cải thiện trải nghiệm người dùng trên nền tảng số.
+Trong lĩnh vực giáo dục, AI được dùng để cá nhân hóa việc học tập.
+Sinh viên công nghệ thông tin cần trang bị kiến thức nền tảng về dữ liệu.
+Việc hiểu rõ thuật toán giúp lập trình viên tối ưu hệ thống tốt hơn.
 """
-
-# Tóm tắt văn bản (3 câu quan trọng nhất)
-summary = tr.summarize_text_compound(text)
-for sentence in summary:
-    print(sentence)
 ```
-
-### 3. Các phương thức tóm tắt
-
-#### a) `summarize_text_basic()` - Tóm tắt cơ bản
-Lấy câu quan trọng nhất + các câu kế tiếp
-
-```python
-summary = tr.summarize_text_basic(text)
-```
-
-#### b) `summarize_text_compound()` - Tóm tắt 3 câu
-Lấy 3 câu quan trọng nhất (không theo thứ tự gốc)
-
-```python
-summary = tr.summarize_text_compound(text)
-```
-
-#### c) `get_highlights()` - Lấy 20% câu quan trọng
-Tự động lấy 20% số câu quan trọng nhất
-
-```python
-highlights = tr.get_highlights(text)
-```
-
-#### d) `summarize_text_freely()` - Tùy chỉnh hoàn toàn
-Tự do điều chỉnh tham số
-
-```python
-summary = tr.summarize_text_freely(
-    text,
-    analyzed_keywords=5,      # Số từ khóa phân tích
-    expected_sentences=2,     # Số câu cần lấy
-    summarize_type=TextRankFacade.GET_ALL_IMPORTANT
-)
-```
-
-**Các kiểu tóm tắt:**
-- `TextRankFacade.GET_ALL_IMPORTANT` - Lấy các câu quan trọng nhất
-- `TextRankFacade.GET_FIRST_IMPORTANT_AND_FOLLOWINGS` - Lấy câu quan trọng nhất + các câu sau
-
-## Thuật Toán TextRank
-
-TextRank là thuật toán dựa trên **PageRank** (Google) để xếp hạng các từ/câu trong văn bản:
-
-1. **Parse văn bản** → Tách thành câu và từ
-2. **Tạo đồ thị** → Mỗi từ là một node, kết nối với từ trước/sau
-3. **Tính điểm** → Dùng thuật toán TextRank để tính trọng số
-4. **Chọn câu** → Lấy câu chứa từ có điểm cao nhất
-
-### Ưu điểm
-- Không cần training data
-- Không phụ thuộc ngôn ngữ (chỉ cần stop words)
-- Nhanh và hiệu quả
-- Kết quả ổn định
-
-## Credits
-
-- Thuật toán TextRank: Mihalcea & Tarau (2004)
-- Vietnamese stop words: Tổng hợp từ nhiều nguồn
 
 ---
+
+### Bước 3: Chọn phương thức tóm tắt
+
+#### **Phương thức 1: `summarize()` - Tự động (KHUYẾN NGHỊ)**
+
+```python
+# Logic: ≤5 câu → max 3 câu, >5 câu → 40% min 5 câu
+summary = tr.summarize(text)
+
+print("TÓM TẮT TỰ ĐỘNG:")
+for i, sentence in enumerate(summary, 1):
+    print(f"{i}. {sentence}")
+```
+
+**Output:**
+```
+1. Nhiều doanh nghiệp Việt Nam bắt đầu ứng dụng AI vào sản xuất và kinh doanh.
+2. Các hệ thống gợi ý giúp cải thiện trải nghiệm người dùng trên nền tảng số.
+3. Việc hiểu rõ thuật toán giúp lập trình viên tối ưu hệ thống tốt hơn.
+```
+
+---
+
+#### **Phương thức 2: `get_highlights()` - Highlights**
+
+```python
+# Lấy 15-25% câu quan trọng (min 2, max 6 câu)
+highlights = tr.get_highlights(text)
+
+print("HIGHLIGHTS:")
+for i, sentence in enumerate(highlights, 1):
+    print(f"{i}. {sentence}")
+```
+
+**Output:**
+```
+1. Nhiều doanh nghiệp Việt Nam bắt đầu ứng dụng AI vào sản xuất và kinh doanh.
+2. Sinh viên công nghệ thông tin cần trang bị kiến thức nền tảng về dữ liệu.
+```
+
+---
+
+#### **Phương thức 3: `summarize_text_compound()` - 3 câu quan trọng nhất**
+
+```python
+# Luôn trả về 3 câu, không theo thứ tự gốc
+summary = tr.summarize_text_compound(text)
+
+print("TOP 3 CÂU QUAN TRỌNG:")
+for i, sentence in enumerate(summary, 1):
+    print(f"{i}. {sentence}")
+```
+
+**Output:**
+```
+1. Các hệ thống gợi ý giúp cải thiện trải nghiệm người dùng trên nền tảng số.
+2. Việc hiểu rõ thuật toán giúp lập trình viên tối ưu hệ thống tốt hơn.
+3. Nhiều doanh nghiệp Việt Nam bắt đầu ứng dụng AI vào sản xuất và kinh doanh.
+```
+
+---
+
+#### **Phương thức 4: `summarize_text_freely()` - Tùy chỉnh**
+
+```python
+# Tùy chỉnh: 5 từ khóa, 2 câu output
+summary = tr.summarize_text_freely(
+    text,
+    analyzed_keywords=5,      # Số từ khóa để phân tích
+    expected_sentences=2,     # Số câu muốn lấy
+    summarize_type=TextRankFacade.GET_ALL_IMPORTANT  # Kiểu tóm tắt
+)
+
+print("⚙️ TÓM TẮT TÙY CHỈNH (5 keywords → 2 câu):")
+for i, sentence in enumerate(summary, 1):
+    print(f"{i}. {sentence}")
+```
+
+**Output:**
+```
+⚙️ TÓM TẮT TÙY CHỈNH (5 keywords → 2 câu):
+1. Các hệ thống gợi ý giúp cải thiện trải nghiệm người dùng trên nền tảng số.
+2. Việc hiểu rõ thuật toán giúp lập trình viên tối ưu hệ thống tốt hơn.
+```
+
+**Kiểu tóm tắt:**
+- `GET_ALL_IMPORTANT` (0): Lấy câu quan trọng nhất, giữ thứ tự gốc
+- `GET_FIRST_IMPORTANT_AND_FOLLOWINGS` (1): Lấy câu quan trọng + các câu theo sau
+
+---
+
+### Bước 4: Trích xuất từ khóa
+
+```python
+keywords = tr.get_only_keywords(text)
+
+print("🔑 TOP 10 KEYWORDS:")
+for rank, (word, score) in enumerate(list(keywords.items())[:10], 1):
+    print(f"{rank:2d}. {word:<25s} {score:.4f}")
+```
+
+**Output:**
+```
+🔑 TOP 10 KEYWORDS:
+ 1. giúp                      1.0000
+ 2. gợi_ý                     0.8333
+ 3. cải_thiện                 0.8333
+ 4. lập_trình_viên            0.8333  ← Từ ghép được giữ nguyên!
+ 5. trải_nghiệm               0.6667
+ 6. nền_tảng                  0.6667
+ 7. kiến_thức                 0.6667
+ 8. doanh_nghiệp              0.5000
+ 9. việt_nam                  0.5000
+10. bắt_đầu                   0.5000
+```
+
+💡 **Chú ý:** VnCoreNLP giữ nguyên từ ghép như `lập_trình_viên`, `công_nghệ_thông_tin` → Chính xác hơn nhiều!
+
+---
+
+## Các Phương Thức
+
+| Method | Output | Use case |
+|--------|--------|----------|
+| `summarize()` | Tự động | ⭐ Khuyến nghị |
+| `get_highlights()` | 15-25% câu | Văn bản dài |
+| `summarize_text_compound()` | 3 câu | So sánh |
+| `summarize_text_freely()` | Tùy chỉnh | Research |
+
+---
+
+## 📚 Tài Liệu
+
+- [QUICKSTART.md](QUICKSTART.md) - 3 bước
+- [HOW_TO_RUN.md](HOW_TO_RUN.md) - Chi tiết
+- [CHANGELOG.md](CHANGELOG.md) - Lịch sử
+
+---
+
+## 🙏 Credits
+
+- VnCoreNLP - VNU UET
+- TextRank - Mihalcea & Tarau
+- Stopwords - Community
+
+**Made with ❤️ for Vietnamese NLP**

@@ -2,10 +2,24 @@
 Quick Start Guide - Vietnamese Text Summarization
 
 Hướng dẫn nhanh cách sử dụng TextRank để tóm tắt văn bản tiếng Việt
+SỬ DỤNG VnCoreNLP để tách từ chính xác
 """
 
 from textrank_facade import TextRankFacade
 from stopwords.vietnamese import Vietnamese
+from py_vncorenlp import VnCoreNLP
+import os
+
+
+# ===== KHỞI TẠO VnCoreNLP (BẮT BUỘC) =====
+print("⏳ Đang tải VnCoreNLP model...")
+VNCORENLP_DIR = os.path.join(os.path.dirname(__file__), "vncorenlp")
+vncorenlp = VnCoreNLP(annotators=["wseg"], save_dir=VNCORENLP_DIR)
+print("✅ VnCoreNLP sẵn sàng!\n")
+
+# ===== KHỞI TẠO FACADE =====
+stopwords = Vietnamese()
+tr = TextRankFacade(vncorenlp, stopwords)
 
 
 def example_basic():
@@ -22,16 +36,12 @@ def example_basic():
     Việt Nam có nền kinh tế đang phát triển nhanh. Việt Nam là thành viên của ASEAN.
     """
     
-    # Khởi tạo
-    tr = TextRankFacade()
-    tr.set_stop_words(Vietnamese())
-    
-    # Tóm tắt
-    summary = tr.summarize_text_compound(text)
+    # Tóm tắt (≤5 câu → max 3)
+    summary = tr.summarize(text)
     
     print("\nVĂN BẢN GỐC:")
     print(text.strip())
-    print("\nTÓM TẮT (3 câu quan trọng nhất):")
+    print(f"\nTÓM TẮT ({len(summary)} câu quan trọng nhất):")
     for i, sentence in enumerate(summary, 1):
         print(f"{i}. {sentence}")
     print()
@@ -49,14 +59,11 @@ def example_keywords():
     để phát triển AI. TensorFlow và PyTorch là các framework mạnh mẽ.
     """
     
-    tr = TextRankFacade()
-    tr.set_stop_words(Vietnamese())
-    
     keywords = tr.get_only_keywords(text)
     
-    print("\nTOP 10 TỪ KHÓA:")
+    print("\nTOP 10 TỪ KHÓA (VnCoreNLP):")
     for i, (word, score) in enumerate(list(keywords.items())[:10], 1):
-        print(f"{i:2d}. {word:15s} (điểm: {score:.3f})")
+        print(f"{i:2d}. {word:20s} (điểm: {score:.3f})")
     print()
 
 
@@ -74,9 +81,6 @@ def example_custom():
     Vaccine đã được phát triển để ngăn chặn đại dịch.
     Người dân cần đeo khẩu trang và rửa tay thường xuyên.
     """
-    
-    tr = TextRankFacade()
-    tr.set_stop_words(Vietnamese())
     
     # Tùy chỉnh: 3 từ khóa, 2 câu
     summary = tr.summarize_text_freely(
@@ -106,28 +110,25 @@ def example_compare_methods():
     Trường có nhiều phòng thí nghiệm hiện đại.
     """
     
-    tr = TextRankFacade()
-    tr.set_stop_words(Vietnamese())
-    
     print("\nVĂN BẢN GỐC:")
     print(text.strip())
     
-    print("\n1. PHƯƠNG THỨC: summarize_text_basic()")
-    print("   (Câu quan trọng nhất + các câu tiếp theo)")
-    basic = tr.summarize_text_basic(text)
-    for sentence in basic:
+    print("\n1. PHƯƠNG THỨC: summarize() - TỰ ĐỘNG")
+    print("   (≤5 câu → max 3, >5 câu → 40% min 5)")
+    auto = tr.summarize(text)
+    for sentence in auto:
         print(f"   - {sentence}")
     
-    print("\n2. PHƯƠNG THỨC: summarize_text_compound()")
+    print("\n2. PHƯƠNG THỨC: get_highlights()")
+    print("   (15-25% câu quan trọng, min 2, max 6)")
+    highlights = tr.get_highlights(text)
+    for sentence in highlights:
+        print(f"   - {sentence}")
+    
+    print("\n3. PHƯƠNG THỨC: summarize_text_compound()")
     print("   (3 câu quan trọng nhất, không theo thứ tự)")
     compound = tr.summarize_text_compound(text)
     for sentence in compound:
-        print(f"   - {sentence}")
-    
-    print("\n3. PHƯƠNG THỨC: get_highlights()")
-    print("   (20% câu quan trọng nhất)")
-    highlights = tr.get_highlights(text)
-    for sentence in highlights:
         print(f"   - {sentence}")
     print()
 
